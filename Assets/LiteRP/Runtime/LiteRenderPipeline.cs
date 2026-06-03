@@ -51,7 +51,7 @@ namespace LiteRP
            
            //为相机创建CommandBuffere
            
-           CommandBuffer cmd = CommandBufferPool.Get(camera.name);
+           CommandBuffer cmd = CommandBufferPool.Get(camera.name); //这个CommandBufferPool在外要添加两个程序集的
            
            
            //设置相机属性参数
