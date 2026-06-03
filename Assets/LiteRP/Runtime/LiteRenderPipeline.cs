@@ -51,7 +51,7 @@ namespace LiteRP
            
            //为相机创建CommandBuffere
            
-           CommandBuffer cmd = CommandBufferPool.Get(camera.name); //这个CommandBufferPool在外要添加两个程序集的
+           CommandBuffer cmd = CommandBufferPool.Get(camera.name); //这个CommandBufferPool在外要添加两个程序集的 是nity.RenderPipelines.Core.Runtime
            
            
            //设置相机属性参数
