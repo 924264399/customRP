@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.Plastic.Newtonsoft.Json.Schema;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -6,6 +7,8 @@ namespace LiteRP
 {
     public class LiteRenderPipeline : RenderPipeline  //运行时渲染管线实例（内存里的 C# 对象）
     {
+        
+        private readonly static ShaderTagId s_ShaderTagId = new ShaderTagId("SRPDefaultUnlit");
         
         //老的接口 为了兼容
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)  
@@ -59,17 +62,51 @@ namespace LiteRP
            context.SetupCameraProperties(camera);
            
            //清理渲染目标
+           cmd.ClearRenderTarget(true, true, CoreUtils.ConvertLinearToActiveColorSpace(camera.backgroundColor)); //清理然后设置颜色为backgroundColor （顺便转化一下色彩空间）
+           
            
            
            //指定渲染排序设置 SortSetting
+           //剩下物体做排序 → 近到远 / 远到近排绘制顺序 （不透明物体近的先画、远的后画） 目前传入camera应该是默认规则
+           var sortSettings = new SortingSettings(camera); 
            
            //指定渲染状态设置 DrawSetting
+           //DrawingSettings【绘制 Pass 设置：用 Shader 里哪个 Pass 去画物体】
+           // 去物体 Shader 里找 LightMode = SRPDefaultUnlit 的 Pass
+           var drawSetting = new DrawingSettings(s_ShaderTagId, sortSettings);
+           
+           
+           
+           //绘制不透明物体
+           sortSettings.criteria = SortingCriteria.CommonOpaque; //绘制不透明物体
            
            //指定渲染过滤设置 FilterSetting
+           //过滤设置：筛掉 “不该被画的物体”  enderQueueRange：按渲染队列筛选  RenderQueueRange.opaque：只拿不透明物体 (0~2500)
+           var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
            
-           //创建渲染列表
+           //创建渲染列表 打包上面三大配置 + 剔除结果
+           var rendererListParams = new RendererListParams(cullingResults,drawSetting, filteringSettings);
+           var rendererList = context.CreateRendererList(ref rendererListParams);
            
            //绘制渲染列表
+           cmd.DrawRendererList(rendererList);
+           
+           
+           
+           
+           //绘制透明物体 再来一遍
+           sortSettings.criteria = SortingCriteria.CommonTransparent;
+           
+           filteringSettings = new FilteringSettings(RenderQueueRange.transparent);
+           
+           rendererListParams = new RendererListParams(cullingResults,drawSetting, filteringSettings);
+           
+           rendererList = context.CreateRendererList(ref rendererListParams);
+           
+           cmd.DrawRendererList(rendererList);
+           
+           
+           
            
            //提交命令缓冲区
            context.ExecuteCommandBuffer(cmd);
