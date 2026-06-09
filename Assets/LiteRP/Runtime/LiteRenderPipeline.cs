@@ -22,24 +22,21 @@ namespace LiteRP
             
 
         }
-
-
         
-        protected override void Dispose(bool disposing) //重写Dispose方法
+        
+        protected override void Dispose(bool disposing) //重写Dispose方法    这个方法就是用来 释放所有资源（管线销毁前最后一站）  
         {
             CleanupRenderGraph();
             base.Dispose(disposing);
-            
             
         }
         
         
         //初始化渲染图
-        
         private void InitializeRenderGraph() //这函数就是用初始化RenderGraph的
         {
             
-            m_RenderGraph = new RenderGraph("LiteRenderPipeline");
+            m_RenderGraph = new RenderGraph("LiteRenderPipeline"); //实例化RenderGraph实例
             
         }
 
